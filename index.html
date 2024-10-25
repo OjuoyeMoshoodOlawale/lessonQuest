@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LessonQuest - Generate Questions</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- TinyMCE (WYSIWYG Editor) -->
+    <script
+      src="https://cdn.tiny.cloud/1/br0xih4f7smjk3wi8uophn40k1sqvgvpn0sbf77mtmvzst6p/tinymce/7/tinymce.min.js"
+      referrerpolicy="origin"
+    ></script>
+
+    <!-- Mammoth.js (for .doc/.docx conversion to HTML) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="text-center">LessonQuest - Generate Questions</h1>
+
+      <!-- Full Form -->
+      <form id="questionForm">
+        <!-- Subject Field -->
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input
+            type="text"
+            class="form-control"
+            id="subject"
+            placeholder="Enter the subject"
+            required
+          />
+        </div>
+
+        <!-- WYSIWYG Editor for Lesson Material -->
+        <div class="form-group">
+          <label for="lessonEditor">Lesson Material</label>
+          <textarea id="lessonEditor"></textarea>
+        </div>
+
+        <!-- Document Upload for .doc/.docx -->
+        <div class="form-group">
+          <label for="docUpload">Upload Document (.doc, .docx)</label>
+          <input
+            type="file"
+            id="docUpload"
+            accept=".doc,.docx"
+            class="form-control"
+          />
+        </div>
+
+        <!-- Age Range -->
+        <div class="form-group">
+          <label for="ageRange">Learner's Age Range</label>
+          <input
+            type="text"
+            class="form-control"
+            id="ageRange"
+            placeholder="Enter age range"
+            required
+          />
+        </div>
+
+        <!-- School Level -->
+        <div class="form-group">
+          <label for="schoolLevel">School Level</label>
+          <select class="form-control" id="schoolLevel" required>
+            <option value="KG">KG</option>
+            <option value="Nursery">Nursery</option>
+            <option value="Primary">Primary</option>
+            <option value="Junior Secondary">Junior Secondary</option>
+            <option value="Senior Secondary">Senior Secondary</option>
+            <option value="Undergraduate">Undergraduate</option>
+            <option value="Post-Graduate">Post-Graduate</option>
+          </select>
+        </div>
+
+        <!-- Complexity Level -->
+        <div class="form-group">
+          <label for="complexity">Level of Complexity</label>
+          <select class="form-control" id="complexity" required>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+
+        <!-- Question Type -->
+        <div class="form-group">
+          <label for="questionType">Question Type</label>
+          <select class="form-control" id="questionType" required>
+            <option value="multiple choice">Multiple Choice</option>
+            <option value="fill in the gap">Fill in the Gap</option>
+            <option value="theory">Theory</option>
+          </select>
+        </div>
+
+        <!-- Number of Sub-Questions for Theory -->
+        <div class="form-group">
+          <label for="numSubQuestions"
+            >Number of Sub-Questions (for Theory)</label
+          >
+          <input
+            type="number"
+            class="form-control"
+            id="numSubQuestions"
+            min="0"
+            value="0"
+          />
+        </div>
+
+        <!-- Number of Questions from Each Section -->
+        <div class="form-group">
+          <label for="numQuestionsFromEach"
+            >Number of Questions from Each Section</label
+          >
+          <input
+            type="number"
+            class="form-control"
+            id="numQuestionsFromEach"
+            required
+          />
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">
+          Generate Questions
+        </button>
+      </form>
+
+      <!-- Display Generated Questions -->
+      <div id="questionsContainer" class="mt-4">
+        <h3>Generated Questions</h3>
+        <textarea
+          id="questionsTextarea"
+          class="form-control"
+          rows="10"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Initialize MathJax -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["\\[", "\\]"],
+            ["\\begin{equation}", "\\end{equation}"],
+          ],
+          processEscapes: true,
+          tags: "all",
+        },
+        svg: {
+          fontCache: "global",
+        },
+      };
+    </script>
+
+    <!-- Initialize TinyMCE Editor -->
+    <script>
+      tinymce.init({
+        selector: "#lessonEditor, #questionsTextarea",
+        plugins: [
+          "lists",
+          "link",
+          "image",
+          "media",
+          "autolink",
+          "preview",
+          "code",
+        ],
+        toolbar:
+          "undo redo | bold italic | link image media | numlist bullist | preview code",
+        setup: (editor) => {
+          editor.on("change keyup", () => {
+            // Check if MathJax is loaded before calling typesetPromise
+            if (
+              window.MathJax &&
+              typeof MathJax.typesetPromise === "function"
+            ) {
+              MathJax.typesetPromise();
+            } else if (window.MathJax) {
+              MathJax.typeset();
+            }
+          });
+        },
+      });
+
+      // Function to display fetched questions and format them with MathJax
+      function displayGeneratedQuestions(text) {
+        const formattedText = text
+          .replace(/(\*\*Question \d+:\*\*)/g, "<strong>$1</strong>")
+          .replace(/\n/g, "<br>");
+
+        tinymce.get("questionsTextarea").setContent(formattedText);
+
+        // Ensure MathJax formatting after setting content
+        if (window.MathJax && typeof MathJax.typesetPromise === "function") {
+          MathJax.typesetPromise();
+        } else if (window.MathJax) {
+          MathJax.typeset();
+        }
+      }
+      // Handle form submission
+      document
+        .getElementById("questionForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const formData = {
+            subject: document.getElementById("subject").value,
+            lessonMaterial: tinymce.get("lessonEditor").getContent(),
+            ageRange: document.getElementById("ageRange").value,
+            schoolLevel: document.getElementById("schoolLevel").value,
+            complexity: document.getElementById("complexity").value,
+            questionType: document.getElementById("questionType").value,
+            numSubQuestions:
+              document.getElementById("numSubQuestions").value || 0,
+            numQuestionsFromEach: document.getElementById(
+              "numQuestionsFromEach"
+            ).value,
+          };
+
+          const submitButton = document.querySelector("button[type=submit]");
+          submitButton.disabled = true;
+          submitButton.textContent = "Generating...";
+
+          fetch("http://localhost:3000/generate-questions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              const questionsText = data.questions.text.replace(/\n/g, "<br>");
+              displayGeneratedQuestions(questionsText);
+            })
+            .catch((error) => {
+              alert("Error generating questions. Please try again.");
+              console.error("Server error:", error);
+            })
+            .finally(() => {
+              submitButton.disabled = false;
+              submitButton.textContent = "Generate Questions";
+            });
+        });
+    </script>
+
+    <!-- Bootstrap JS and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
