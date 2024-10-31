@@ -236,7 +236,7 @@
           submitButton.disabled = true;
           submitButton.textContent = "Generating...";
 
-          fetch("https://lesson-quest.vercel.app/generate-questions", {
+          fetch("/generate-questions", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

@@ -16,7 +16,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 // Middleware to parse JSON bodies from requests
 app.use(express.json());
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "pages", "index.html"));
 });
 // Route to generate questions based on teacher inputs
 app.post("/generate-questions", async (req, res) => {
